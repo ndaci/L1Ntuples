@@ -18,6 +18,9 @@
 #include "L1TriggerDPG/L1Ntuples/interface/L1AnalysisRecoTrackDataFormat.h"
 #include "L1TriggerDPG/L1Ntuples/interface/L1AnalysisL1MenuDataFormat.h"
 
+#include "L1TriggerDPG/L1Ntuples/interface/L1AnalysisGenJetDataFormat.h"  // Nadir
+#include "L1TriggerDPG/L1Ntuples/interface/L1AnalysisGenMetDataFormat.h" // Nadir
+
 namespace{
   namespace{
     L1Analysis::L1AnalysisEventDataFormat          pL1ev; 
@@ -39,5 +42,8 @@ namespace{
     L1Analysis::L1AnalysisRecoVertexDataFormat     pL1vertex;   
     L1Analysis::L1AnalysisRecoTrackDataFormat      pL1track; 
     L1Analysis::L1AnalysisL1MenuDataFormat        pL1menu; 
+
+    L1Analysis::L1AnalysisGenJetDataFormat        pL1genjet; 
+    L1Analysis::L1AnalysisGenMetDataFormat        pL1genmet;    
    }
 }

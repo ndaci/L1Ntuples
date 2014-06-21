@@ -18,4 +18,6 @@
 <class name="L1Analysis::L1AnalysisRecoVertexDataFormat"/>
 <class name="L1Analysis::L1AnalysisRecoTrackDataFormat"/>
 <class name="L1Analysis::L1AnalysisL1MenuDataFormat"/>
+<class name="L1Analysis::L1AnalysisGenJetDataFormat"/> 
+<class name="L1Analysis::L1AnalysisGenMetDataFormat"/>
 </lcgdict>
