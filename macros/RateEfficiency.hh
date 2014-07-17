@@ -10,6 +10,7 @@
 #include "TH2F.h"
 #include "TH3F.h"
 #include "TVector2.h"
+#include "TLorentzVector.h"
 
 typedef map<TString,TH1F*> MAPHISTO1D;
 typedef map<TString,TH2F*> MAPHISTO2D;
@@ -146,6 +147,12 @@ private:
   vector<double>  mhtPhi;
   vector<double>  mhtBx;
 
+};
+
+struct HighestPt{
+  bool operator()( TLorentzVector v1, TLorentzVector v2 ) const{
+    return v1.Pt() > v2.Pt();
+  }
 };
 
 #endif
