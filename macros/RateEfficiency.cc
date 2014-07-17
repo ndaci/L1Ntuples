@@ -1,8 +1,8 @@
 #include "RateEfficiency.hh"
 
-int verbose=1;
+int verbose=-1;
 int CUTETM=70; // L1_ETM70 seed from L1 group
-int CUTPHI=2.8;
+int CUTPHI=2.0;
 int CUTPHI_H=1;
 int FREQ=100;
 int MAXETM=100;
@@ -62,13 +62,11 @@ int RateEfficiency::run(bool runOnData, string resultTag, int minLs, int maxLs, 
     InitVar();
     GetExtraInfo();
     OrderJets();
-
-    return 666; //ND
-
     EvalAlgos();
     ScanMaxExtra();
     FillHistos();
     InitVar();
+
   } // end loop over entries
 
   // Rescale histograms
@@ -235,11 +233,13 @@ int RateEfficiency::ScanMaxExtra()
     for(UInt_t iJ=0 ; iJ<nAllJets ; iJ++) {
       if( allJetEt[iJ]>=iJetCut ) {
 	mindphi = computeDeltaPhi(allJetPhi[iJ], metPhi[0]);
-	if(verbose>0) cout << "----- mindphi(iJ=" << iJ << ") = " << mindphi << endl;
-	for(UInt_t iL=0 ; iL<4 ; iL++) {
+	for(UInt_t iL=0 ; iL<4 ; iL++)
 	  if(iJ<=iL && mindphi < minDPhi_Jet_ETM[iL]) minDPhi_Jet_ETM[iL] = mindphi;
-	  if(iJ<=iL && mindphi < minDPhi_Jet_HTM[iL]) minDPhi_Jet_HTM[iL] = mindphi;
-	}
+
+
+	mindphi = computeDeltaPhi(allJetPhi[iJ], mhtPhi[0]);
+	for(UInt_t iL=0 ; iL<4 ; iL++)
+	  if(iJ<=iL && mindphi < minDPhi_Jet_HTM[iL]) minDPhi_Jet_HTM[iL] = mindphi;	
       }
     }
     
@@ -284,7 +284,7 @@ int RateEfficiency::ScanMaxExtra()
     }
 
     // Printout values
-    if(verbose>0) cout << "--- Values : min dphi" << endl;
+    if(verbose>0) cout << "--- Values : min dphi for iJetCut=" << iJetCut << endl;
     for(UInt_t iL=0 ; iL<4 ; iL++) {
       if(verbose>0) cout << "minDPhi_Jet_ETM["  << iL << "]=" << minDPhi_Jet_ETM[iL]  << " ; "
 			 << "minDPhi_JetC_ETM[" << iL << "]=" << minDPhi_JetC_ETM[iL] << " ; "
@@ -515,36 +515,32 @@ int RateEfficiency::OrderJets()
   allJetPhi.clear();
   allJetBx.clear();
 
-  map<UInt_t, UInt_t> exclude; // <index, type> type:1=central,2=forward
+  vector<TLorentzVector> vecJets;
+  TLorentzVector theJet;
 
-  for(UInt_t iJC=0 ; iJC<nCenJets ; iJC++) {
-    
-    if(exclude[iJC]==1) continue;
-    
-    for(UInt_t iJF=0 ; iJF<nFwdJets ; iJF++) {
-      
-      if(exclude[iJF]==2) continue;
-
-      if(fwdJetEt[iJF]>cenJetEt[iJC]) {
-	allJetEt.push_back(fwdJetEt[iJF]);
-	allJetEta.push_back(fwdJetEta[iJF]);
-	allJetPhi.push_back(fwdJetPhi[iJF]);
-	allJetBx.push_back(fwdJetBx[iJF]);
-	exclude[iJF]=2;
-	nAllJets++;
-      }
-      else {
-	allJetEt.push_back(cenJetEt[iJF]);
-	allJetEta.push_back(cenJetEta[iJF]);
-	allJetPhi.push_back(cenJetPhi[iJF]);
-	allJetBx.push_back(cenJetBx[iJF]);
-	exclude[iJC]=1;
-	nAllJets++;
-      }
-    }
+  // Fill the vector with central jets
+  for(UInt_t iJ=0 ; iJ<nCenJets ; iJ++) {
+    theJet.SetPtEtaPhiM(cenJetEt[iJ], cenJetEta[iJ], cenJetPhi[iJ], 0);
+    vecJets.push_back(theJet);
   }
 
-  if(verbose>0) {
+  // Fill the vector with forward jets
+  for(UInt_t iJ=0 ; iJ<nFwdJets ; iJ++) {
+    theJet.SetPtEtaPhiM(fwdJetEt[iJ], fwdJetEta[iJ], fwdJetPhi[iJ], 0);
+    vecJets.push_back(theJet);
+  }
+
+  // Sort the jets by pT
+  sort(vecJets.begin(), vecJets.end(), HighestPt());
+  
+  for(UInt_t iJ=0 ; iJ<vecJets.size() ; iJ++) {
+    allJetEt.push_back(vecJets[iJ].Pt());
+    allJetEta.push_back(vecJets[iJ].Eta());
+    allJetPhi.push_back(vecJets[iJ].Phi());
+    nAllJets++ ;
+  }
+
+  if(verbose>0 && nFwdJets!=0) {
     cout << "--- nAllJets=" << nAllJets << endl;
     for(UInt_t iJ=0 ; iJ<nAllJets ; iJ++) {
       cout << "allJetEt["  << iJ << "]=" << allJetEt[iJ]  << " ; "
@@ -552,6 +548,7 @@ int RateEfficiency::OrderJets()
 	   << endl;
     }
   }
+
   return 0;
 }
 
