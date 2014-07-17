@@ -25,13 +25,6 @@ int runRateEfficiency(string fileType, int isCrossSec = false, int nEvents = 0)
       ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true);
     }
 
-  else if (fileType == "crab_40PU_25bx_v2_list_PhiMpiPi")
-    {
-      RateEfficiency myRateEfficiency;
-      myRateEfficiency.OpenWithList("list_uct_25ns_v2.txt");
-      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2_PhiMpiPi",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true);
-    }
-
   else if (fileType == "crab_40PU_50bx_v2")
     {
       RateEfficiency myRateEfficiency("dcap://maite.iihe.ac.be/pnfs/iihe/cms/store/user/ndaci/Neutrino_Pt-2to20_gun/Rate_13TeV_40PU_25ns_62X_ReEmul2015_v2_10June2014/140610_153319/0000/L1Tree_79.root"); 
@@ -56,20 +49,6 @@ int runRateEfficiency(string fileType, int isCrossSec = false, int nEvents = 0)
       RateEfficiency myRateEfficiency;
       myRateEfficiency.OpenWithList("list_MonojetM1000.txt");
       ctrl = myRateEfficiency.run(false,fileType,0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,false);
-    }
-
-  else if (fileType == "MonojetAV_M1_40PU_25bx_PhiMpiPi")
-    {
-      RateEfficiency myRateEfficiency;
-      myRateEfficiency.OpenWithList("list_MonojetM1.txt");
-      ctrl = myRateEfficiency.run(false,fileType+"_PhiMpiPi",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,false);
-    }
-
-  else if (fileType == "MonojetAV_M1000_40PU_25bx_PhiMpiPi")
-    {
-      RateEfficiency myRateEfficiency;
-      myRateEfficiency.OpenWithList("list_MonojetM1000.txt");
-      ctrl = myRateEfficiency.run(false,fileType+"_PhiMpiPu",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,false);
     }
 
   else if(fileType == "8TeV") {
