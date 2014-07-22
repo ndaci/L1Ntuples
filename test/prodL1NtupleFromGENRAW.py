@@ -7,9 +7,9 @@ from L1TriggerDPG.L1Menu.customL1NtupleGEN_cfg import *
 process.p.remove(process.l1RecoTreeProducer)
 process.p.remove(process.l1MuonRecoTreeProducer)
 
-if options.useStage1Layer2:
-    process.p *= process.Layer2
-    process.p *= process.l1NtupleProducerStage1Layer2
+#if options.useStage1Layer2:
+#    process.p *= process.Layer2
+#    process.p *= process.l1NtupleProducerStage1Layer2
 
 # L1GenTreeProducer parameters
 process.l1GenTreeProducer.maxJet = cms.uint32(20)
@@ -22,6 +22,9 @@ NEVTS=-1
 
 process.TFileService.fileName=OUTFILE
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(NEVTS) )
+
+process.load('FWCore.MessageService.MessageLogger_cfi')
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 # M=1GeV, AV, GEN-SIM-RAW
 #readFiles.extend( ['file:///user/ndaci/Data/DarkMonojet/Fall13dr/DarkMatter_Monojet_M-1_AV_Tune4C_13TeV-madgraph/GEN-SIM-RAW/tsg_PU40bx25_POSTLS162_V2-v1/00000/08E15E24-04D7-E311-ABEA-002590A3C992.root' ] )
