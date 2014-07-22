@@ -18,11 +18,15 @@ int compareEffRate(TString path     = "results/",
   MAPALGO mapalgo;
 
   const int nF=3;
-  const int nH=20;
+  const int nH=24;
 
   TH3F *hMaxDPhi[nH][nF];
   TH2F *hTemp;
   TH1F *hTemp1;
+
+  const UInt_t nMini=10;
+  UInt_t a_iMiniFirst[nMini] = {0,1,2,3,0,0,0,1,1,2};
+  UInt_t a_iMiniLast[ nMini] = {0,1,2,3,1,2,3,2,3,3};
 
   TString nameH[nH]={"hEff_ETM", "hEff_HTM",   "hEff_Jet", "hEff_JetC",
 		     "hEff_Jet_ETM",           "hEff_JetC_ETM", 
@@ -32,7 +36,9 @@ int compareEffRate(TString path     = "results/",
 		     "hEff_Jet_ETM_OR70",      "hEff_JetC_ETM_OR70", 
 		     "hEff_Jet_ETM_DPhi_OR70", "hEff_JetC_ETM_DPhi_OR70",
 		     "hMaxDPhi_Jet_ETM",       "hMaxDPhi_Jet_HTM",
-		     "hMaxDPhi_JetC_ETM",      "hMaxDPhi_JetC_HTM"};
+		     "hMaxDPhi_JetC_ETM",      "hMaxDPhi_JetC_HTM",
+		     "hMinDPhi_Jet_ETM",       "hMinDPhi_Jet_HTM",
+		     "hMinDPhi_JetC_ETM",      "hMinDPhi_JetC_HTM"};
 
   TString nameF[nF]={tagM1, tagM1000, tagRate};
 
@@ -103,49 +109,62 @@ int compareEffRate(TString path     = "results/",
 	continue;
       }
       
-      f[iF]->GetObject(nameH[iH],hMaxDPhi[iH][iF]);
-      if(!hMaxDPhi[iH][iF]) continue;
-
-      // Scan ETM, Jet eT, DPhi cuts
-      int ETM0=41;
-      int JET0=101;
-      int ETMD=5;
-      int JETD=5;
-      float jetcut=0;
-      float etmcut=0;
-      float dphicut=0;
-      float integral=0;
-
-      for(int iETM=0 ; iETM<7 ; iETM+=1) {
-
-	// Project 3D=>2D at fixed ETM bin
-	etmcut = ETM0+iETM*ETMD;
-	hMaxDPhi[iH][iF]->GetYaxis()->SetRange(etmcut,etmcut);
-	hTemp = (TH2F*) (hMaxDPhi[iH][iF]->Project3D("zx")) ;
-	hTemp->GetYaxis()->SetRangeUser(0,4);
+      else if(iH>=20) {
 	
-	// Plot the 2D projection
-	//TCanvas c("c","c",60,0,600,600);
-	hTemp->Draw("colz");
-	gStyle->SetOptStat(0);
-	palette = (TPaletteAxis*) hTemp->GetListOfFunctions()->FindObject("palette");
-	doPalette(palette);
-	gPad->Update();
-
-	TString nameETM = Form("%d", int(etmcut-1) );
-	c.Print(path+"/scan/"+nameH[iH]+"_"+snameF[iF]+"_ETM"+nameETM+".png");
-	c.Print(path+"/scan/"+nameH[iH]+"_"+snameF[iF]+"_ETM"+nameETM+".pdf");
-
-	// Scan jet cut and dphi cut values => integrate => efficiency/rate
-	for(int iJetCut=0 ; iJetCut<21 ; iJetCut++) {
-	  for(int iDPhi=0 ; iDPhi<16 ; iDPhi++) {
-	    jetcut  = JET0+iJetCut*JETD;
-	    dphicut = iDPhi*0.2;
-	    //integral = hTemp->Integral(jetcut,jetcut,iDPhi+1,-1);
-	    integral = hTemp->Integral(jetcut,jetcut,iDPhi+1,16);
-	    mapalgo[nameH[iH]][etmcut-1][jetcut-1][dphicut].push_back(integral);
-	  }
+	for(UInt_t iL=0 ; iL<nMini ; iL++) {
+	  TString siL = TString(Form("%d_%d",iMiniFirst[iL],iMiniLast[iL]));
+	  f[iF]->GetObject(nameH[iH],hMaxDPhi[iH][iF]);
+	  
 	}
+	
+      }
+      
+      else {
+
+	f[iF]->GetObject(nameH[iH],hMaxDPhi[iH][iF]);
+	if(!hMaxDPhi[iH][iF]) continue;
+
+	// Scan ETM, Jet eT, DPhi cuts
+	int ETM0=41;
+	int JET0=101;
+	int ETMD=5;
+	int JETD=5;
+	float jetcut=0;
+	float etmcut=0;
+	float dphicut=0;
+	float integral=0;
+
+	for(int iETM=0 ; iETM<7 ; iETM+=1) {
+
+	  // Project 3D=>2D at fixed ETM bin
+	  etmcut = ETM0+iETM*ETMD;
+	  hMaxDPhi[iH][iF]->GetYaxis()->SetRange(etmcut,etmcut);
+	  hTemp = (TH2F*) (hMaxDPhi[iH][iF]->Project3D("zx")) ;
+	  hTemp->GetYaxis()->SetRangeUser(0,4);
+	
+	  // Plot the 2D projection
+	  //TCanvas c("c","c",60,0,600,600);
+	  hTemp->Draw("colz");
+	  gStyle->SetOptStat(0);
+	  palette = (TPaletteAxis*) hTemp->GetListOfFunctions()->FindObject("palette");
+	  doPalette(palette);
+	  gPad->Update();
+
+	  TString nameETM = Form("%d", int(etmcut-1) );
+	  c.Print(path+"/scan/"+nameH[iH]+"_"+snameF[iF]+"_ETM"+nameETM+".png");
+	  c.Print(path+"/scan/"+nameH[iH]+"_"+snameF[iF]+"_ETM"+nameETM+".pdf");
+
+	  // Scan jet cut and dphi cut values => integrate => efficiency/rate
+	  for(int iJetCut=0 ; iJetCut<21 ; iJetCut++) {
+	    for(int iDPhi=0 ; iDPhi<16 ; iDPhi++) {
+	      jetcut  = JET0+iJetCut*JETD;
+	      dphicut = iDPhi*0.2;
+	      //integral = hTemp->Integral(jetcut,jetcut,iDPhi+1,-1);
+	      integral = hTemp->Integral(jetcut,jetcut,iDPhi+1,16);
+	      mapalgo[nameH[iH]][etmcut-1][jetcut-1][dphicut].push_back(integral);
+	    }
+	  } // end loop scan jet
+	} // end loop scan etm
       }
       ////////////////////////////////
 
