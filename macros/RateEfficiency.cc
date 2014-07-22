@@ -1,6 +1,6 @@
 #include "RateEfficiency.hh"
 
-int verbose=-1;
+int verbose=1;
 int CUTETM=70; // L1_ETM70 seed from L1 group
 int CUTPHI=2.0;
 int CUTPHI_H=1;
@@ -8,7 +8,7 @@ int FREQ=100;
 int MAXETM=100;
 int MAXJET=200;
 
-int RateEfficiency::run(bool runOnData, string resultTag, int minLs, int maxLs, float crossSec, float avPU, int nBunches, int isCrossSec, int nEvents, bool doRate) {
+int RateEfficiency::run(bool runOnData, string resultTag, int minLs, int maxLs, float crossSec, float avPU, int nBunches, int isCrossSec, int nEvents, bool doRate, UInt_t iPart, UInt_t nPart) {
 
   cout << "∫=== THE BEGINNING ===∫" << endl;
 
@@ -19,6 +19,20 @@ int RateEfficiency::run(bool runOnData, string resultTag, int minLs, int maxLs, 
   TFile *outFile = new TFile("results/"+resultName+".root","recreate");
   outFile->cd();
   ofstream outstream("results/"+resultName+".txt", ios::out);
+
+  // Manage minima
+  const UInt_t nMini=10;
+  UInt_t a_iMiniFirst[nMini] = {0,1,2,3,0,0,0,1,1,2};
+  UInt_t a_iMiniLast[ nMini] = {0,1,2,3,1,2,3,2,3,3};
+  //
+  for(UInt_t iM=0 ; iM<nMini ; iM++ ) {
+    iMiniFirst.push_back(a_iMiniFirst[iM]);
+    iMiniLast.push_back( a_iMiniLast[iM]);
+    minDPhi_Jet_ETM.push_back(1000000000);
+    minDPhi_Jet_HTM.push_back(1000000000);
+    minDPhi_JetC_ETM.push_back(1000000000);
+    minDPhi_JetC_HTM.push_back(1000000000);    
+  }
 
   // Prepare histograms
   if(verbose>0) cout << "- Initialize Histograms : do 1D, " ;
@@ -34,14 +48,25 @@ int RateEfficiency::run(bool runOnData, string resultTag, int minLs, int maxLs, 
     n_ETM60_NoQCD2_OR_ETM80 = n_ETM60_NoQCD4_OR_ETM80 = 
     n_ETM65_NoQCD2_OR_ETM75 = n_ETM65_NoQCD4_OR_ETM75 = 0;
 
+
   // Process the inputs
   float nZeroBias = 0;
-  int nevents = nEvents == 0 ? GetEntries() : nEvents;
+  UInt_t nevents = nEvents == 0 ? GetEntries() : nEvents;
   if(verbose>0) cout << "Running on " << nevents << " events." << endl;
   if(runOnData) if(verbose>0) cout << "Run on data" << endl;
 
+  // Decide list of events to process
+  if(iPart>=nPart) {iPart=0; nPart=1;}
+  UInt_t iStart=0, iEnd=0, nProcess=0;
+  nProcess = nPart!=0 ? nevents / nPart : nevents;
+  iStart = iPart*nProcess;
+  if(iPart<nPart-1) iEnd = (iPart+1)*nProcess;
+  else if(iPart==nPart-1) iEnd = nevents;
+
+  if(verbose>0) cout << "- iStart=" << iStart << " iEnd=" << iEnd << endl;
+  
   // Loop over input tree
-  for (Long64_t event=0; event<nevents; ++event) { 
+  for (Long64_t event=iStart; event<iEnd; ++event) { 
 
     // Get current entry
     Long64_t eventEntry = LoadTree(event); 
@@ -49,7 +74,7 @@ int RateEfficiency::run(bool runOnData, string resultTag, int minLs, int maxLs, 
     GetEntry(event);
 
     // Warn regularly
-    if (event%FREQ == 0 && verbose>0) cout << "Processed " << event << " events." << endl;
+    if (event%FREQ == 0 && verbose>0) cout << "Processed " << event-iStart+1 << " events." << endl;
 
     // Limits in terms of LS
     if ( event_->lumi < minLs || event_->lumi > maxLs ) continue;
@@ -70,14 +95,16 @@ int RateEfficiency::run(bool runOnData, string resultTag, int minLs, int maxLs, 
   } // end loop over entries
 
   // Rescale histograms
-  if(verbose>0) cout << "# of zero bias events (weighted) used for rate computation : " << nZeroBias << endl;
+  if(verbose>0) cout << "# of events processed : " << nProcess << endl;
   //
-  float scaleFactor = ScaleFactor(nZeroBias,nBunches);
+  //float scaleFactor = ScaleFactor(nZeroBias,nBunches);
+  float scaleFactor = ScaleFactor(nevents,nBunches);
   //
   if (isCrossSec) 
     scaleFactor /= (computeAvgLumi(crossSec,avPU,nBunches)*10000) ; // CB lumi is in 1E34 units
   //
-  if(!doRate) scaleFactor = nZeroBias!=0 ? 1/float(nZeroBias) : 1;
+  //if(!doRate) scaleFactor = nZeroBias!=0 ? 1/float(nZeroBias) : 1;
+  if(!doRate) scaleFactor = nevents!=0 ? 1/float(nevents) : 1;
   if(verbose>1) cout << "- scaleFactor=" << scaleFactor << endl;
   //
   if(verbose>1) cout << "- Rescale histos" << endl;
@@ -215,36 +242,46 @@ int RateEfficiency::ScanMaxExtra()
   dphi = 0;
   maxDPhi_Jet_ETM = maxDPhi_Jet_HTM = maxDPhi_JetC_ETM = maxDPhi_JetC_HTM = -1;
 
+  if(verbose>2) cout << "-- initialize mindphi..." ;
+  //
   mindphi = 1000000000;
-  for(UInt_t iL=0 ; iL<4 ; iL++)
+  for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++)
     minDPhi_Jet_ETM[iL] = minDPhi_Jet_HTM[iL] = minDPhi_JetC_ETM[iL] = minDPhi_JetC_HTM[iL] = 1000000000;
+  //
+  if(verbose>2) cout << " ...done" << endl;
   
   // Scan all jet eT cut values
   for(int iJetCut=0 ; iJetCut<=MAXJET ; iJetCut++) {
 
+    if(verbose>2) cout << "--- iJetCut=" << iJetCut << endl;
+
     dphi = 0;
     maxDPhi_Jet_ETM = maxDPhi_Jet_HTM = maxDPhi_JetC_ETM = maxDPhi_JetC_HTM = -1;
 
+    if(verbose>2) cout << "--- initialize mindphi..." ;
     mindphi = 1000000000;
-    for(UInt_t iL=0 ; iL<4 ; iL++)
+    for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++)
       minDPhi_Jet_ETM[iL] = minDPhi_Jet_HTM[iL] = minDPhi_JetC_ETM[iL] = minDPhi_JetC_HTM[iL] = 1000000000;
+    if(verbose>2) cout << " ...done" << endl;
 
     // Look all jets
     for(UInt_t iJ=0 ; iJ<nAllJets ; iJ++) {
       if( allJetEt[iJ]>=iJetCut ) {
 	mindphi = computeDeltaPhi(allJetPhi[iJ], metPhi[0]);
-	for(UInt_t iL=0 ; iL<4 ; iL++)
-	  if(iJ<=iL && mindphi < minDPhi_Jet_ETM[iL]) minDPhi_Jet_ETM[iL] = mindphi;
+	for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++)
+	  if(iJ>=iMiniFirst[iL] && iJ<=iMiniLast[iL]) 
+	    if(mindphi < minDPhi_Jet_ETM[iL]) minDPhi_Jet_ETM[iL] = mindphi;
 
 
 	mindphi = computeDeltaPhi(allJetPhi[iJ], mhtPhi[0]);
-	for(UInt_t iL=0 ; iL<4 ; iL++)
-	  if(iJ<=iL && mindphi < minDPhi_Jet_HTM[iL]) minDPhi_Jet_HTM[iL] = mindphi;	
+	for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++)
+	  if(iJ>=iMiniFirst[iL] && iJ<=iMiniLast[iL]) 
+	    if(mindphi < minDPhi_Jet_HTM[iL]) minDPhi_Jet_HTM[iL] = mindphi;	
       }
     }
     
     // Look central jets
-    if(verbose>1) cout << "--- Look central jets : iJetCut=" << iJetCut << endl;
+    if(verbose>2) cout << "--- Look central jets : iJetCut=" << iJetCut << endl;
     for(uint iJ=0 ; iJ<nCenJets ; iJ++) {
 
       if( cenJetEt[iJ]>=iJetCut ) {
@@ -254,8 +291,9 @@ int RateEfficiency::ScanMaxExtra()
 	if(dphi > maxDPhi_JetC_ETM) maxDPhi_JetC_ETM = dphi;
 	//
 	mindphi = dphi;
-	for(UInt_t iL=0 ; iL<4 ; iL++) {
-	  if(iJ<=iL && mindphi < minDPhi_JetC_ETM[iL]) minDPhi_JetC_ETM[iL] = mindphi;
+	for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++) {
+	  if(iJ>=iMiniFirst[iL] && iJ<=iMiniLast[iL]) 
+	    if(mindphi < minDPhi_JetC_ETM[iL]) minDPhi_JetC_ETM[iL] = mindphi;
 	}
 
 	dphi = computeDeltaPhi(cenJetPhi[iJ], mhtPhi[0]);
@@ -263,15 +301,16 @@ int RateEfficiency::ScanMaxExtra()
 	if(dphi > maxDPhi_JetC_HTM) maxDPhi_JetC_HTM = dphi;
 	//
 	mindphi = dphi;
-	for(UInt_t iL=0 ; iL<4 ; iL++) {
-	  if(iJ<=iL && mindphi < minDPhi_JetC_HTM[iL]) minDPhi_JetC_HTM[iL] = mindphi;
+	for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++) {
+	  if(iJ>=iMiniFirst[iL] && iJ<=iMiniLast[iL]) 
+	    if(mindphi < minDPhi_JetC_HTM[iL]) minDPhi_JetC_HTM[iL] = mindphi;
 	}
 	
       }
     }
     
     // Look forward jets
-    if(verbose>1) cout << "--- Look forward jets : iJetCut=" << iJetCut << endl;
+    if(verbose>2) cout << "--- Look forward jets : iJetCut=" << iJetCut << endl;
     for(uint iJ=0 ; iJ<nFwdJets ; iJ++) {
       if(verbose>2) cout << "---- iJ=" << iJ << endl;
       if( fwdJetEt[iJ]>=iJetCut ) {
@@ -284,9 +323,14 @@ int RateEfficiency::ScanMaxExtra()
     }
 
     // Printout values
-    if(verbose>0) cout << "--- Values : min dphi for iJetCut=" << iJetCut << endl;
-    for(UInt_t iL=0 ; iL<4 ; iL++) {
-      if(verbose>0) cout << "minDPhi_Jet_ETM["  << iL << "]=" << minDPhi_Jet_ETM[iL]  << " ; "
+    if(verbose>2) cout << "--- Values : min dphi for iJetCut=" << iJetCut << endl;
+    for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++) {
+      if(minDPhi_Jet_ETM[ iL]==1000000000) minDPhi_Jet_ETM[ iL] = 3.2;
+      if(minDPhi_JetC_ETM[iL]==1000000000) minDPhi_JetC_ETM[iL] = 3.2;
+      if(minDPhi_Jet_HTM[ iL]==1000000000) minDPhi_Jet_HTM[ iL] = 3.2;
+      if(minDPhi_JetC_HTM[iL]==1000000000) minDPhi_JetC_HTM[iL] = 3.2;
+
+      if(verbose>2) cout << "minDPhi_Jet_ETM["  << iL << "]=" << minDPhi_Jet_ETM[iL]  << " ; "
 			 << "minDPhi_JetC_ETM[" << iL << "]=" << minDPhi_JetC_ETM[iL] << " ; "
 			 << "minDPhi_Jet_HTM["  << iL << "]=" << minDPhi_Jet_HTM[iL]  << " ; "
 			 << "minDPhi_JetC_HTM[" << iL << "]=" << minDPhi_JetC_HTM[iL] << " ; "
@@ -294,15 +338,17 @@ int RateEfficiency::ScanMaxExtra()
     }
 
     // Fill DeltaPhi histograms
-    if(verbose>1) cout << "--- Fill DeltaPhi iJetCut=" << iJetCut << endl;
+    if(verbose>2) cout << "--- Fill DeltaPhi iJetCut=" << iJetCut << endl;
     //for(int iETM=0 ; iETM<MAXETM ; iETM++) {
       //if(met[0]>=iETM) {
     if(maxDPhi_Jet_ETM >=0) hTH3F["hMaxDPhi_Jet_ETM"]  -> Fill( iJetCut, met[0], maxDPhi_Jet_ETM ); 
     if(maxDPhi_JetC_ETM>=0) hTH3F["hMaxDPhi_JetC_ETM"] -> Fill( iJetCut, met[0], maxDPhi_JetC_ETM ); 
 
     // Scan all cases (iL leading jets)
-    for(UInt_t iL=0 ; iL<4 ; iL++) {
-      TString siL = TString(Form("%d",iL));
+    if(verbose>1) cout << "--- Fill min DeltaPhi iJetCut=" << iJetCut << endl;
+    for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++) {
+      TString siL = TString(Form("%d_%d",iMiniFirst[iL],iMiniLast[iL]));
+      if(verbose>2) cout << "---- siL : " << siL << endl;
       if(minDPhi_Jet_ETM[iL] >=0) hTH3F["hMinDPhi_Jet_ETM"+siL]  -> Fill( iJetCut, met[0], minDPhi_Jet_ETM[iL] ); 
       if(minDPhi_JetC_ETM[iL]>=0) hTH3F["hMinDPhi_JetC_ETM"+siL] -> Fill( iJetCut, met[0], minDPhi_JetC_ETM[iL] ); 
     }
@@ -311,8 +357,8 @@ int RateEfficiency::ScanMaxExtra()
     if(maxDPhi_Jet_HTM>=0)  hTH3F["hMaxDPhi_Jet_HTM"]  -> Fill( iJetCut, mht[0], maxDPhi_Jet_HTM ); 
     if(maxDPhi_JetC_HTM>=0) hTH3F["hMaxDPhi_JetC_HTM"] -> Fill( iJetCut, mht[0], maxDPhi_JetC_HTM ); 
 
-    for(UInt_t iL=0 ; iL<4 ; iL++) {
-      TString siL = TString(Form("%d",iL));
+    for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++) {
+      TString siL = TString(Form("%d_%d",iMiniFirst[iL],iMiniLast[iL]));
       if(minDPhi_Jet_HTM[iL] >=0) hTH3F["hMinDPhi_Jet_HTM"+siL] -> Fill( iJetCut, mht[0], minDPhi_Jet_HTM[iL] ); 
       if(minDPhi_JetC_HTM[iL]>=0) hTH3F["hMinDPhi_JetC_HTM"+siL]-> Fill( iJetCut, mht[0], minDPhi_JetC_HTM[iL]); 
     }
@@ -429,9 +475,12 @@ int RateEfficiency::InitHistos3D()
   for(uint iH=0 ; iH<nH ; iH++) {
     
     if(iH>=4) {
-      for(UInt_t iL=0 ; iL<4 ; iL++) {
-	siL = TString(Form("%d",iL));
-	hTH3F[name_histos[iH]+siL] = new TH3F(name_histos[iH]+siL,
+      for(UInt_t iL=0 ; iL<iMiniFirst.size() ; iL++) {
+	siL = TString(Form("%d_%d",iMiniFirst[iL],iMiniLast[iL]));
+	
+	if(verbose>2) cout << "-- book histo 3d : " << name_histos[iH]+siL << endl;
+
+	hTH3F[name_histos[iH]+siL] = new TH3F(name_histos[iH]+"_"+siL,
 					      title_histos[iH]+"("+siL+" jets)", 
 					      nbins[0],xmin,xmax[0],
 					      nbins[1],xmin,xmax[1],
@@ -540,8 +589,21 @@ int RateEfficiency::OrderJets()
     nAllJets++ ;
   }
 
-  if(verbose>0 && nFwdJets!=0) {
+  if(verbose>2 && nFwdJets!=0) {
     cout << "--- nAllJets=" << nAllJets << endl;
+
+    for(UInt_t iJ=0 ; iJ<nCenJets ; iJ++) {
+      cout << "cenJetEt["  << iJ << "]=" << cenJetEt[iJ]  << " ; "
+	   << "cenJetPhi[" << iJ << "]=" << cenJetPhi[iJ] << " ; "
+	   << endl;
+    }
+
+    for(UInt_t iJ=0 ; iJ<nFwdJets ; iJ++) {
+      cout << "fwdJetEt["  << iJ << "]=" << fwdJetEt[iJ]  << " ; "
+	   << "fwdJetPhi[" << iJ << "]=" << fwdJetPhi[iJ] << " ; "
+	   << endl;
+    }
+
     for(UInt_t iJ=0 ; iJ<nAllJets ; iJ++) {
       cout << "allJetEt["  << iJ << "]=" << allJetEt[iJ]  << " ; "
 	   << "allJetPhi[" << iJ << "]=" << allJetPhi[iJ] << " ; "

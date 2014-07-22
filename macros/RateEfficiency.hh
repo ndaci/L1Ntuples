@@ -18,6 +18,7 @@ typedef map<TString,TH3F*> MAPHISTO3D;
 
 using namespace std;
 
+// CLASS //
 class RateEfficiency : public L1Ntuple {
   
 public:
@@ -28,39 +29,40 @@ public:
   RateEfficiency()  {}
   ~RateEfficiency() {}
 
-  int run(bool runOnData, std::string resultTag, int minLs, int maxLs, 
-	  float crossSec, float avPU, int nBunches, int isCrossSec, int nEvents = 0, bool doRate=true);
+  Int_t run(bool runOnData, std::string resultTag, Int_t minLs, Int_t maxLs, 
+	    Float_t crossSec, Float_t avPU, Int_t nBunches, Int_t isCrossSec, Int_t nEvents = 0, bool doRate=true,
+	    UInt_t iPart=0, UInt_t nPart=1);
   
 private:
 
   // Trigger methods
-  int GetExtraInfo();
-  int OrderJets();
-  int ScanMaxExtra();
-  int EvalAlgos();
-  int RescaleAlgos(float scaleFactor);
-  int WriteValues(ofstream &outstream);
+  Int_t GetExtraInfo();
+  Int_t OrderJets();
+  Int_t ScanMaxExtra();
+  Int_t EvalAlgos();
+  Int_t RescaleAlgos(Float_t scaleFactor);
+  Int_t WriteValues(ofstream &outstream);
 
   // Geometry
-  float computeDeltaPhi(float phi1, float phi2);
-  float computeDeltaR(  float phi1, float phi2, float eta1, float eta2);
+  Float_t computeDeltaPhi(Float_t phi1, Float_t phi2);
+  Float_t computeDeltaR(  Float_t phi1, Float_t phi2, Float_t eta1, Float_t eta2);
 
   // Initialize members
-  int InitVar();
+  Int_t InitVar();
 
   // Initialize and rescale histograms
-  int   InitHistos1D();
-  int   InitHistos2D();
-  int   InitHistos3D();
-  void  RescaleHistos1D(float scaleFactor);
-  void  RescaleHistos2D(float scaleFactor);
-  void  RescaleHistos3D(float scaleFactor);
-  int   FillHistos();
+  Int_t   InitHistos1D();
+  Int_t   InitHistos2D();
+  Int_t   InitHistos3D();
+  void  RescaleHistos1D(Float_t scaleFactor);
+  void  RescaleHistos2D(Float_t scaleFactor);
+  void  RescaleHistos3D(Float_t scaleFactor);
+  Int_t   FillHistos();
 
   // Rescaling functions
-  float ScaleFactor(float nZeroBias, float nBunches);
+  Float_t ScaleFactor(Float_t nZeroBias, Float_t nBunches);
   void  setRateError(TH1F* histo);
-  float computeAvgLumi(float xSec, float avPU, int nBunches) { return 11246. * avPU * nBunches / (1E7 * xSec); };
+  Float_t computeAvgLumi(Float_t xSec, Float_t avPU, Int_t nBunches) { return 11246. * avPU * nBunches / (1E7 * xSec); };
 
   // Histogram maps and iterators
   MAPHISTO1D hTH1F;
@@ -71,11 +73,13 @@ private:
   MAPHISTO3D::iterator it_hTH3F;
 
   // Trigger event maxima
-  int maxJetPt, maxJetPtC, maxETM, maxHTM;
-  int maxJetPt_DPhi, maxJetPtC_DPhi;
-  double maxDPhi_Jet_ETM, maxDPhi_Jet_HTM, maxDPhi_JetC_ETM, maxDPhi_JetC_HTM;
-  double minDPhi_Jet_ETM[4], minDPhi_Jet_HTM[4], minDPhi_JetC_ETM[4], minDPhi_JetC_HTM[4];
-  double dphi, mindphi;
+  Int_t maxJetPt, maxJetPtC, maxETM, maxHTM;
+  Int_t maxJetPt_DPhi, maxJetPtC_DPhi;
+  Double_t maxDPhi_Jet_ETM, maxDPhi_Jet_HTM, maxDPhi_JetC_ETM, maxDPhi_JetC_HTM;
+  Double_t dphi, mindphi;
+
+  vector<Double_t> minDPhi_Jet_ETM, minDPhi_Jet_HTM, minDPhi_JetC_ETM, minDPhi_JetC_HTM;
+  vector<UInt_t> iMiniFirst, iMiniLast;
 
   // Counters for algos
   Float_t n_ETM60_NoQCD2_OR_ETM70, n_ETM58_NoQCD4_OR_ETM70, 
@@ -84,68 +88,68 @@ private:
 
   // L1Extra informations
   UInt_t          nAllJets;
-  vector<double>  allJetEt;
-  vector<double>  allJetEta;
-  vector<double>  allJetPhi;
-  vector<int>     allJetBx;
+  vector<Double_t>  allJetEt;
+  vector<Double_t>  allJetEta;
+  vector<Double_t>  allJetPhi;
+  vector<Int_t>     allJetBx;
 
   UInt_t          nIsoEm;
-  vector<double>  isoEmEt;
-  vector<double>  isoEmEta;
-  vector<double>  isoEmPhi;
-  vector<int>     isoEmBx;
+  vector<Double_t>  isoEmEt;
+  vector<Double_t>  isoEmEta;
+  vector<Double_t>  isoEmPhi;
+  vector<Int_t>     isoEmBx;
 
   UInt_t          nNonIsoEm;
-  vector<double>  nonIsoEmEt;
-  vector<double>  nonIsoEmEta;
-  vector<double>  nonIsoEmPhi;
-  vector<int>     nonIsoEmBx;
+  vector<Double_t>  nonIsoEmEt;
+  vector<Double_t>  nonIsoEmEta;
+  vector<Double_t>  nonIsoEmPhi;
+  vector<Int_t>     nonIsoEmBx;
 
   UInt_t          nCenJets;
-  vector<double>  cenJetEt;
-  vector<double>  cenJetEta;
-  vector<double>  cenJetPhi;
-  vector<int>     cenJetBx;
+  vector<Double_t>  cenJetEt;
+  vector<Double_t>  cenJetEta;
+  vector<Double_t>  cenJetPhi;
+  vector<Int_t>     cenJetBx;
 
   UInt_t          nFwdJets;
-  vector<double>  fwdJetEt;
-  vector<double>  fwdJetEta;
-  vector<double>  fwdJetPhi;
-  vector<int>     fwdJetBx;
+  vector<Double_t>  fwdJetEt;
+  vector<Double_t>  fwdJetEta;
+  vector<Double_t>  fwdJetPhi;
+  vector<Int_t>     fwdJetBx;
 
   UInt_t          nTauJets;
-  vector<double>  tauJetEt;
-  vector<double>  tauJetEta;
-  vector<double>  tauJetPhi;
-  vector<int>     tauJetBx;
+  vector<Double_t>  tauJetEt;
+  vector<Double_t>  tauJetEta;
+  vector<Double_t>  tauJetPhi;
+  vector<Int_t>     tauJetBx;
 
   UInt_t          nMuons;
-  vector<double>  muonEt;
-  vector<double>  muonEta;
-  vector<double>  muonPhi;
-  vector<int>     muonChg;
-  vector<unsigned int> muonIso;
-  vector<unsigned int> muonFwd;
-  vector<unsigned int> muonMip;
-  vector<unsigned int> muonRPC;
-  vector<int>     muonBx;
-  vector<int>     muonQuality;
+  vector<Double_t>  muonEt;
+  vector<Double_t>  muonEta;
+  vector<Double_t>  muonPhi;
+  vector<Int_t>     muonChg;
+  vector<UInt_t> muonIso;
+  vector<UInt_t> muonFwd;
+  vector<UInt_t> muonMip;
+  vector<UInt_t> muonRPC;
+  vector<Int_t>     muonBx;
+  vector<Int_t>     muonQuality;
 
-  vector<double>  hfEtSum;
-  vector<unsigned int> hfBitCnt;
-  vector<int>     hfBx;
+  vector<Double_t>  hfEtSum;
+  vector<UInt_t> hfBitCnt;
+  vector<Int_t>     hfBx;
 
-  unsigned int    nMet;
-  vector<double>  et;
-  vector<double>  met;
-  vector<double>  metPhi;
-  vector<double>  metBx;
+  UInt_t    nMet;
+  vector<Double_t>  et;
+  vector<Double_t>  met;
+  vector<Double_t>  metPhi;
+  vector<Double_t>  metBx;
 
   UInt_t          nMht;
-  vector<double>  ht;
-  vector<double>  mht;
-  vector<double>  mhtPhi;
-  vector<double>  mhtBx;
+  vector<Double_t>  ht;
+  vector<Double_t>  mht;
+  vector<Double_t>  mhtPhi;
+  vector<Double_t>  mhtBx;
 
 };
 
