@@ -15,45 +15,80 @@ int runRateEfficiency(string fileType, int isCrossSec = false, int nEvents = 0)
   if (fileType == "crab_40PU_25bx_v2")
     {
       RateEfficiency myRateEfficiency("dcap://maite.iihe.ac.be/pnfs/iihe/cms/store/user/ndaci/Neutrino_Pt-2to20_gun/Rate_13TeV_40PU_25ns_62X_ReEmul2015_v2_10June2014/140610_144741/0000/L1Tree_14.root"); 
-      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true);
+      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true, 0, 1);
     }
 
   else if (fileType == "crab_40PU_25bx_v2_list")
     {
       RateEfficiency myRateEfficiency;
       myRateEfficiency.OpenWithList("list_uct_25ns_v2.txt");
-      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true);
+      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true, 0, 1);
+    }
+
+  else if (fileType == "crab_40PU_25bx_v2_list_p0")
+    {
+      RateEfficiency myRateEfficiency;
+      myRateEfficiency.OpenWithList("list_uct_25ns_v2.txt");
+      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2_p0",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true, 0, 5);
+    }
+
+  else if (fileType == "crab_40PU_25bx_v2_list_p1")
+    {
+      RateEfficiency myRateEfficiency;
+      myRateEfficiency.OpenWithList("list_uct_25ns_v2.txt");
+      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2_p1",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true, 1, 5);
+    }
+
+  else if (fileType == "crab_40PU_25bx_v2_list_p2")
+    {
+      RateEfficiency myRateEfficiency;
+      myRateEfficiency.OpenWithList("list_uct_25ns_v2.txt");
+      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2_p2",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true, 2, 5);
+    }
+
+  else if (fileType == "crab_40PU_25bx_v2_list_p3")
+    {
+      RateEfficiency myRateEfficiency;
+      myRateEfficiency.OpenWithList("list_uct_25ns_v2.txt");
+      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2_p3",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true, 3, 5);
+    }
+
+  else if (fileType == "crab_40PU_25bx_v2_list_p4")
+    {
+      RateEfficiency myRateEfficiency;
+      myRateEfficiency.OpenWithList("list_uct_25ns_v2.txt");
+      ctrl = myRateEfficiency.run(false,"crab_40PU_25bx_v2_p4",0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true, 4, 5);
     }
 
   else if (fileType == "crab_40PU_50bx_v2")
     {
       RateEfficiency myRateEfficiency("dcap://maite.iihe.ac.be/pnfs/iihe/cms/store/user/ndaci/Neutrino_Pt-2to20_gun/Rate_13TeV_40PU_25ns_62X_ReEmul2015_v2_10June2014/140610_153319/0000/L1Tree_79.root"); 
-      ctrl = myRateEfficiency.run(false,"crab_40PU_50bx_v2",0,500000000,xSec13TeV,40,nBunches50ns,isCrossSec,nEvents,true);
+      ctrl = myRateEfficiency.run(false,"crab_40PU_50bx_v2",0,500000000,xSec13TeV,40,nBunches50ns,isCrossSec,nEvents,true, 0, 1);
     }
 
   else if (fileType == "crab_40PU_25bx_v4_Emul")
     {
       RateEfficiency myRateEfficiency("dcap://maite.iihe.ac.be/pnfs/iihe/cms/store/user/ndaci/Neutrino_Pt-2to20_gun/Rate_13TeV_40PU_25ns_62X_ReEmul2015_v4_12June2014_Emul/140611_161547/0000/L1Tree_38.root"); 
-      ctrl = myRateEfficiency.run(false,fileType,0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true);
+      ctrl = myRateEfficiency.run(false,fileType,0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,true, 0, 1);
     }
 
   else if (fileType == "MonojetAV_M1_40PU_25bx")
     {
       RateEfficiency myRateEfficiency;
       myRateEfficiency.OpenWithList("list_MonojetM1.txt");
-      ctrl = myRateEfficiency.run(false,fileType,0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,false);
+      ctrl = myRateEfficiency.run(false,fileType,0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,false, 0, 1);
     }
 
   else if (fileType == "MonojetAV_M1000_40PU_25bx")
     {
       RateEfficiency myRateEfficiency;
       myRateEfficiency.OpenWithList("list_MonojetM1000.txt");
-      ctrl = myRateEfficiency.run(false,fileType,0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,false);
+      ctrl = myRateEfficiency.run(false,fileType,0,500000000,xSec13TeV,40,nBunches25ns,isCrossSec,nEvents,false, 0, 1);
     }
 
   else if(fileType == "8TeV") {
       RateEfficiency myRateEfficiency("");
-      ctrl = myRateEfficiency.run(false,fileType,0,500000000,xSec8TeV,40,nBunches25ns,isCrossSec,nEvents,true);
+      ctrl = myRateEfficiency.run(false,fileType,0,500000000,xSec8TeV,40,nBunches25ns,isCrossSec,nEvents,true, 0, 1);
   }
 
   else 
